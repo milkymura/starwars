@@ -23,7 +23,10 @@ class Card extends Component {
   handleSave = () => {
     const tempProps = { ...this.props }
     delete tempProps.onHandleUpdateUser
+    delete tempProps.onHandleFavorite
     delete tempProps.planetList
+    delete tempProps.favorite_index
+    delete tempProps.favorite
 
     const { onHandleUpdateUser, id } = this.props
     const { name, birth_year, homeworld } = this.state.fields
@@ -48,8 +51,9 @@ class Card extends Component {
 
 
   render() {
-    const { name, image , birth_year, 
-      planetList, homeworld_alt
+    const { id , name, image , birth_year, 
+      planetList, homeworld_alt, favorite, favorite_index,
+      onHandleFavorite
     } = this.props
 
     const {
@@ -61,9 +65,13 @@ class Card extends Component {
       }
     } = this.state
 
-    return (
+    return (  
       <div className='card'>
         <div className='card-content'>
+            {favorite
+              ? <button onClick={() => onHandleFavorite(false, id)}>unfavorite</button>
+              : <button onClick={() => onHandleFavorite(true, id)}>favorite</button>
+            }
             {isEdit 
               ? <input 
                   type="text"

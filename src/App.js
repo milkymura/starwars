@@ -6,7 +6,7 @@ import star from './images/star.svg';
 import wars from './images/wars.svg';
 import ReactPaginate from 'react-paginate';
 
-import { get, put} from './tools/requests'
+import { get, put, post, remove } from './tools/requests'
 
 const ITEMS_PER_PAGE = 10
 
@@ -16,15 +16,22 @@ class App extends Component {
     this.state = {
       people : [],
       page: 0,
-      planets: []
+      planets: [],
+      favorites: []
     }
   }
-
 
   componentDidMount() {
     this.handlePageReq(this.state.page)
       .then(res => this.handlePlanetUpdate(res, 1))
     this.getAllPlanets()
+    this.getFavorites()
+  }
+
+
+  getFavorites =  async () => {
+    const favorites = await get('peoplefavorites').then(res => res)
+    this.setState({ favorites })
   }
 
   getAllPlanets = async () => {
@@ -32,10 +39,25 @@ class App extends Component {
     this.setState({ planets })
   }
 
+  handleFavorite = (isFavored, dataId) => {
+    console.log('handleFavorite' , isFavored, dataId)
+    if (isFavored) {
+      post('peoplefavorites', {dataId})
+        .then( res => this.handlePageReq(this.state.page))
+        .then( res => this.handlePlanetUpdate(res, this.state.page))
+        .then( res => this.getFavorites())
+    } else {
+      remove('peoplefavorites', {dataId})
+        .then( res => this.handlePageReq(this.state.page))
+        .then( res => this.handlePlanetUpdate(res, this.state.page))
+        .then( res => this.getFavorites())
+    }
+  }
+
   handleUpdateUser = (id, userData) => {
     put(`people/${id}`, userData)
-    .then( res => this.handlePageReq(this.state.page))
-    .then( res => this.handlePlanetUpdate(res, this.state.page))
+      .then( res => this.handlePageReq(this.state.page))
+      .then( res => this.handlePlanetUpdate(res, this.state.page))
   }
 
   handlePageReq = (page) => {
@@ -46,8 +68,10 @@ class App extends Component {
 
   handlePlanetUpdate = async (people, page) => {
     if(people.length) {
-      const planets = await get('planets').then(res => res)
-      const peopleReplacement = people.map((person) => {
+      const { planets, favorites } = this.state 
+
+      // replace id world to world names
+      const withPlanetNames = people.map((person) => {
         const personPlanetName = planets.find(( planet  => planet.id === person.homeworld ))
         if (personPlanetName) {
           return {
@@ -58,8 +82,17 @@ class App extends Component {
         return { ...person }
       })
 
-      console.log('people === ', people)
-      this.setState({ people : peopleReplacement })
+      // detect if id is favorite
+      const withFavorites = withPlanetNames.map(person => {
+        const isFav = favorites.findIndex( i => {
+          return (i.dataId === person.id)
+        })
+        return isFav > 0 
+          ? { ...person, favorite: true, favorite_index: isFav } 
+          : { ...person, favorite: false }
+      })
+
+      this.setState({ people : withFavorites })
     }
   }
 
@@ -83,6 +116,7 @@ class App extends Component {
             <Card 
               {...info}
               onHandleUpdateUser={this.handleUpdateUser}
+              onHandleFavorite={this.handleFavorite}
               planetList={planets}
             />
           )) 

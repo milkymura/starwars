@@ -26,3 +26,31 @@ export function put(entity,data) {
 	return fetch(`${API}/${entity}`, options)
 		.then(res => res.json())
 }
+
+// no time to refactor
+export function post(entity,data) {
+	const options = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(data)
+	}
+
+	return fetch(`${API}/${entity}`, options)
+		.then(res => res.json())
+}
+
+// no time to refactor
+export function remove(entity,data) {
+	const options = {
+		method: 'DELETE',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(data)
+	}
+
+	return fetch(`${API}/${entity}`)
+		.then(res => res.json())
+}
