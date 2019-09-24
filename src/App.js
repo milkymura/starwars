@@ -6,7 +6,7 @@ import star from './images/star.svg';
 import wars from './images/wars.svg';
 import ReactPaginate from 'react-paginate';
 
-import { get } from './tools/requests'
+import { get, put} from './tools/requests'
 
 const ITEMS_PER_PAGE = 10
 
@@ -15,7 +15,8 @@ class App extends Component {
     super(props)
     this.state = {
       people : [],
-      page: 0
+      page: 0,
+      planets: []
     }
   }
 
@@ -23,6 +24,18 @@ class App extends Component {
   componentDidMount() {
     this.handlePageReq(this.state.page)
       .then(res => this.handlePlanetUpdate(res, 1))
+    this.getAllPlanets()
+  }
+
+  getAllPlanets = async () => {
+    const planets = await get('planets').then(res => res)
+    this.setState({ planets })
+  }
+
+  handleUpdateUser = (id, userData) => {
+    put(`people/${id}`, userData)
+    .then( res => this.handlePageReq(this.state.page))
+    .then( res => this.handlePlanetUpdate(res, this.state.page))
   }
 
   handlePageReq = (page) => {
@@ -39,10 +52,13 @@ class App extends Component {
         if (personPlanetName) {
           return {
             ...person,
-            homeworld : personPlanetName.name
+            homeworld_alt : personPlanetName.name
           }
         }
+        return { ...person }
       })
+
+      console.log('people === ', people)
       this.setState({ people : peopleReplacement })
     }
   }
@@ -53,7 +69,7 @@ class App extends Component {
   }
 
   render() {
-    const { people } = this.state
+    const { people , planets} = this.state
     return (
       <div className='content'>
         <div className='logo'>
@@ -63,7 +79,13 @@ class App extends Component {
         </div>
         <SearchBar />
         { people.length !== 0 
-          && people.map((info) => <Card {...info}/>) 
+          && people.map((info) => (
+            <Card 
+              {...info}
+              onHandleUpdateUser={this.handleUpdateUser}
+              planetList={planets}
+            />
+          )) 
         }
         <ReactPaginate
           previousLabel={'previous'}

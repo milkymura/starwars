@@ -14,10 +14,15 @@ export function get(entity, start, end) {
 	return fetch(requestQry).then(res => res.json())
 }
 
-// export function put(entity,) {
-// 	const  = {
-// 
-// 	}
-// 	const req = fetch(`${API}/${entity}`, options)
-// 	return .then(res => res.json())
-// }
+export function put(entity,data) {
+	const options = {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(data)
+	}
+
+	return fetch(`${API}/${entity}`, options)
+		.then(res => res.json())
+}
