@@ -4,23 +4,34 @@ import Card from './Card.js';
 import SearchBar from "./SearchBar.js"
 import star from './images/star.svg';
 import wars from './images/wars.svg';
+import ReactPaginate from 'react-paginate';
 
 import { get } from './tools/requests'
+
+const ITEMS_PER_PAGE = 10
 
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      people : []
+      people : [],
+      page: 0
     }
   }
 
 
   componentDidMount() {
-    get('people').then(res => this.handlePlanetUpdate(res))
+    this.handlePageReq(this.state.page)
+      .then(res => this.handlePlanetUpdate(res, 1))
   }
 
-  handlePlanetUpdate = async (people) => {
+  handlePageReq = (page) => {
+    const current = page * ITEMS_PER_PAGE
+    const next = (page + 1) * ITEMS_PER_PAGE
+    return get('people', current, next)
+  }
+
+  handlePlanetUpdate = async (people, page) => {
     if(people.length) {
       const planets = await get('planets').then(res => res)
       const peopleReplacement = people.map((person) => {
@@ -32,12 +43,13 @@ class App extends Component {
           }
         }
       })
-      this.setState({
-        people : peopleReplacement
-      }, () => {
-        console.log('peopleReplacement', peopleReplacement)
-      })
+      this.setState({ people : peopleReplacement })
     }
+  }
+
+  handlePageClick = data => {
+    this.handlePageReq(data.selected)
+      .then(res => this.handlePlanetUpdate(res, data.selected))
   }
 
   render() {
@@ -53,6 +65,19 @@ class App extends Component {
         { people.length !== 0 
           && people.map((info) => <Card {...info}/>) 
         }
+        <ReactPaginate
+          previousLabel={'previous'}
+          nextLabel={'next'}
+          breakLabel={'...'}
+          breakClassName={'break-me'}
+          pageCount={people.length}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={5}
+          onPageChange={this.handlePageClick}
+          containerClassName={'pagination'}
+          subContainerClassName={'pages pagination'}
+          activeClassName={'active'}
+        />
       </div>
     );
   }
