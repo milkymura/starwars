@@ -15,11 +15,30 @@ class App extends Component {
     }
   }
 
+
   componentDidMount() {
-    get('people')
-      .then(res => this.setState({ people : res }))
+    get('people').then(res => this.handlePlanetUpdate(res))
   }
 
+  handlePlanetUpdate = async (people) => {
+    if(people.length) {
+      const planets = await get('planets').then(res => res)
+      const peopleReplacement = people.map((person) => {
+        const personPlanetName = planets.find(( planet  => planet.id === person.homeworld ))
+        if (personPlanetName) {
+          return {
+            ...person,
+            homeworld : personPlanetName.name
+          }
+        }
+      })
+      this.setState({
+        people : peopleReplacement
+      }, () => {
+        console.log('peopleReplacement', peopleReplacement)
+      })
+    }
+  }
 
   render() {
     const { people } = this.state
